@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
@@ -13,12 +12,10 @@ import { environment } from '../environments/environment.development';
 import { GEMINI_PROMO } from './video-data';
 
 import { FileConversionService } from './file-conversion.service';
-//import { GoogleAIFileManager } from "@google/generative-ai/files";
 
 @Component({
   selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [RouterOutlet],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
@@ -32,14 +29,13 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     // Google AI
-    //this.TestGeminiPro();
+    this.TestGeminiPro();
     //this.TestGeminiProChat();
     //this.TestGeminiProVisionImages();
     //this.TestGeminiProStreaming();
-    ////this.TestGeminiFileAPI();
 
     // Vertex AI
-    this.TestGeminiProWithVertexAIViaREST();
+    //this.TestGeminiProWithVertexAIViaREST();
   }
 
   ////////////////////////////////////////////////////////
@@ -67,7 +63,7 @@ export class AppComponent implements OnInit {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     console.log(response.candidates?.[0].content.parts[0].text);
-    console.log(response.text);
+    console.log(response.text());
   }
 
   async TestGeminiProChat() {
@@ -91,11 +87,15 @@ export class AppComponent implements OnInit {
       history: [
         {
           role: "user",
-          parts: "Hi there!",
+          parts: [
+            { text: "Hi there!" },
+          ]
         },
         {
           role: "model",
-          parts: "Great to meet you. What would you like to know?",
+          parts: [
+            { text: "Great to meet you. What would you like to know?" },
+          ]
         },
       ],
       generationConfig: {
@@ -107,7 +107,7 @@ export class AppComponent implements OnInit {
     const result = await chat.sendMessage(prompt);
     const response = await result.response;
     console.log(response.candidates?.[0].content.parts[0].text);
-    console.log(response.text);
+    console.log(response.text());
   }
 
   async TestGeminiProVisionImages() {
@@ -197,58 +197,6 @@ export class AppComponent implements OnInit {
       console.log('stream chunk: ' + item.text());
     }
   }
-
-  /* async TestGeminiFileAPI() {
-    try {
-      // Upload media through the Gemini File API (image, video, audio, code, etc)
-      const fileManager = new GoogleAIFileManager(environment.API_KEY);
-      const fileResult = await fileManager.uploadFile("baked_goods_2.jpeg", {
-        mimeType: "image/jpeg",
-        name: "files/baked_goods_2",
-        displayName: "baked goods",
-      });
-
-      // Gemini Client
-      const genAI = new GoogleGenerativeAI(environment.API_KEY);
-      const generationConfig = {
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-          },
-        ],
-        maxOutputTokens: 100,
-      };
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        ...generationConfig,
-      });
-
-      let prompt = {
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: "Provide a recipe" },
-              {
-                fileData: {
-                  mimeType: fileResult.file.mimeType,
-                  fileUri: fileResult.file.uri
-                }
-              },
-            ],
-          },
-        ] as Content[],
-      };
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      console.log(response.candidates?.[0].content.parts[0].text);
-      console.log(response);
-    } catch (error) {
-      console.error('Error running prompt', error);
-    }    
-  } */
 
   ////////////////////////////////////////////////////////
   // VertexAI - requires Google Cloud Account + Setup
