@@ -241,7 +241,14 @@ export class AppComponent implements OnInit {
   buildEndpointUrl(projectId: string) {
     const BASE_URL = 'https://us-central1-aiplatform.googleapis.com/';
     const API_VERSION = 'v1'; // may be different at this time
-    const MODEL = 'gemini-1.5-flash-002';
+    const MODEL = 'gemini-2.0-flash-exp'; 
+    // Models:
+      // gemini-2.0-flash-exp (Gemini 2.0 Flash Experimental)
+      // gemini-exp-1206 (Gemini 2.0 Pro Experimental)
+      // gemini-1.5-flash-002 (Gemini 1.5 Flash)
+      // gemini-1.5-pro-002 (Gemini 1.5 Pro)
+
+      // Note: gemini-2.0-flash-thinking-exp-01-21 is not compatible with this endpoint
 
     let url = BASE_URL; // base url
     url += API_VERSION; // api version
