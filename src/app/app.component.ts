@@ -12,6 +12,7 @@ import { environment } from '../environments/environment.development';
 import { GEMINI_PROMO } from './video-data';
 
 import { FileConversionService } from './file-conversion.service';
+import { GoogleAI } from './models.constants';
 
 @Component({
   selector: 'app-root',
@@ -55,7 +56,7 @@ export class AppComponent implements OnInit {
       maxOutputTokens: 100,
     };
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: GoogleAI.Model.Gemini20ProExp,
       ...generationConfig,
     });
 
@@ -79,7 +80,7 @@ export class AppComponent implements OnInit {
       //maxOutputTokens: 100,
     };
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: GoogleAI.Model.Gemini20ProExp,
       ...generationConfig,
     });
 
@@ -134,7 +135,7 @@ export class AppComponent implements OnInit {
         maxOutputTokens: 100,
       };
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: GoogleAI.Model.Gemini20ProExp,
         ...generationConfig,
       });
 
@@ -175,7 +176,7 @@ export class AppComponent implements OnInit {
       maxOutputTokens: 100,
     };
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: GoogleAI.Model.Gemini20ProExp,
       ...generationConfig,
     });
 
@@ -241,14 +242,7 @@ export class AppComponent implements OnInit {
   buildEndpointUrl(projectId: string) {
     const BASE_URL = 'https://us-central1-aiplatform.googleapis.com/';
     const API_VERSION = 'v1'; // may be different at this time
-    const MODEL = 'gemini-2.0-flash-exp'; 
-    // Models:
-      // gemini-2.0-flash-exp (Gemini 2.0 Flash Experimental)
-      // gemini-exp-1206 (Gemini 2.0 Pro Experimental)
-      // gemini-1.5-flash-002 (Gemini 1.5 Flash)
-      // gemini-1.5-pro-002 (Gemini 1.5 Pro)
-
-      // Note: gemini-2.0-flash-thinking-exp-01-21 is not compatible with this endpoint
+    const MODEL = GoogleAI.Model.Gemini20ProExp; 
 
     let url = BASE_URL; // base url
     url += API_VERSION; // api version
