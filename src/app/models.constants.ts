@@ -1,6 +1,4 @@
 export namespace GoogleAI {
-  
-
   export enum Model {
     // Official Models
     Gemini20Flash = "gemini-2.0-flash",
