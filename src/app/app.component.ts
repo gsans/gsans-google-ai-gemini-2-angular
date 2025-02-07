@@ -3,10 +3,10 @@ import { RouterOutlet } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import {
-  Content,
   GoogleGenerativeAI,
   HarmBlockThreshold,
   HarmCategory,
+  SchemaType,
 } from '@google/generative-ai';
 import { environment } from '../environments/environment.development';
 import { GEMINI_PROMO } from './video-data';
@@ -30,10 +30,14 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     // Google AI
-    this.TestGeminiPro();
+    //this.TestGeminiPro();
     //this.TestGeminiProChat();
     //this.TestGeminiProVisionImages();
     //this.TestGeminiProStreaming();
+
+    //this.TestGeminiProStructuredOutput();
+    //this.TestGeminiProCodeExecution();
+    this.TestGeminiProCodeExecutionCSV();
 
     // Vertex AI
     //this.TestGeminiProWithVertexAIViaREST();
@@ -198,6 +202,157 @@ export class AppComponent implements OnInit {
       console.log('stream chunk: ' + item.text());
     }
   }
+
+  async TestGeminiProStructuredOutput() {
+    // Documentation: 
+    //   https://ai.google.dev/gemini-api/docs/structured-output?lang=node
+    //   https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/control-generated-output
+
+    const schema = {
+      description: "List of recipes",
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          recipeName: {
+            type: SchemaType.STRING,
+            description: "Name of the recipe",
+            nullable: false,
+          },
+        },
+        required: ["recipeName"],
+      },
+    };
+
+    // Gemini Client
+    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+      maxOutputTokens: 100,
+      responseMimeType: "application/json",
+      responseSchema: schema,
+    };
+
+    const model = genAI.getGenerativeModel({
+      model: GoogleAI.Model.Gemini20ProExp,
+      ...generationConfig,
+    });
+
+    const prompt = "List a few popular cookie recipes.";
+    const result = await model.generateContent(prompt);
+    console.log(result.response.text());
+  }
+
+  async TestGeminiProCodeExecution(){
+    // Documentation: 
+    //   https://ai.google.dev/gemini-api/docs/code-execution?lang=node
+    //   https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution
+
+    // Gemini Client
+    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+      maxOutputTokens: 100,
+    };
+
+    const model = genAI.getGenerativeModel({
+      model: GoogleAI.Model.Gemini20ProExp,
+      ...generationConfig,
+      tools: [
+        {
+          codeExecution: {},
+        },
+      ],
+    });
+
+    const prompt = "What is the sum of the first 50 prime numbers? Generate and run code for the calculation, and make sure you get all 50.";
+    const result = await model.generateContent(prompt);
+    console.log(result.response.text());
+  }
+
+  async TestGeminiProCodeExecutionCSV() {
+    // Documentation: 
+    //   https://ai.google.dev/gemini-api/docs/code-execution?lang=node
+    //   https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution
+    // CSV:
+    //   https://www.kaggle.com/datasets/tarunpaparaju/apple-aapl-historical-stock-data
+
+    let csv = await this.fileConversionService.convertToBase64(
+      'apple-AAPL-historical-stock-data.csv'
+    );
+
+    // Check for successful conversion to Base64
+    if (typeof csv !== 'string') {
+      console.error('CSV conversion to Base64 failed.');
+      return;
+    }
+
+    // Gemini Client
+    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+      maxOutputTokens: 100,
+    };
+
+    const model = genAI.getGenerativeModel({
+      model: GoogleAI.Model.Gemini20ProExp,
+      ...generationConfig,
+      tools: [
+        {
+          codeExecution: {},
+        },
+      ],
+    });
+
+    const prompt = {
+      contents: [
+        { 
+          role: 'user', 
+          parts: [
+            {
+              inlineData: {
+                mimeType: 'text/csv',
+                data: csv,
+              },
+            },
+            {
+              text: "Create a line plot using Matplotlib to visualize the change in stock price for Apple (AAPL), with the x-axis as dates and the y-axis as stock price. Use data from the file and include a title and axis labels.",
+            }
+          ] 
+        }
+      ],
+    };
+
+    const result = await model.generateContent(prompt);
+    // visualise Matplot diagram as output image
+    // https://jaredwinick.github.io/base64-image-viewer/
+    let base64ImageString = "data:image/png;base64,";
+    if (result){
+      result.response.candidates?.[0].content.parts.forEach(element => {
+        if (element.inlineData && element.inlineData.mimeType=="image/png"){
+          base64ImageString += element.inlineData?.data;
+        }
+      });
+    }
+    console.log(base64ImageString);
+    console.log(result.response.text());
+  }
+
 
   ////////////////////////////////////////////////////////
   // VertexAI - requires Google Cloud Account + Setup
