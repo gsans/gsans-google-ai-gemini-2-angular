@@ -281,78 +281,85 @@ export class AppComponent implements OnInit {
   }
 
   async TestGeminiProCodeExecutionCSV() {
-    // Documentation: 
+    // Documentation:
     //   https://ai.google.dev/gemini-api/docs/code-execution?lang=node
     //   https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution
     // CSV:
     //   https://www.kaggle.com/datasets/tarunpaparaju/apple-aapl-historical-stock-data
 
-    let csv = await this.fileConversionService.convertToBase64(
-      'apple-AAPL-historical-stock-data.csv'
-    );
+    try {
+      let csv = await this.fileConversionService.convertToBase64(
+        'apple-AAPL-historical-stock-data.csv'
+      );
 
-    // Check for successful conversion to Base64
-    if (typeof csv !== 'string') {
-      console.error('CSV conversion to Base64 failed.');
-      return;
-    }
+      // Check for successful conversion to Base64
+      if (typeof csv !== 'string') {
+        console.error('CSV conversion to Base64 failed.');
+        return;
+      }
 
-    // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
-    const generationConfig = {
-      safetySettings: [
-        {
-          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-        },
-      ],
-      maxOutputTokens: 100,
-    };
+      // Gemini Client
+      const genAI = new GoogleGenerativeAI(environment.API_KEY);
+      const generationConfig = {
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+          },
+        ],
+        maxOutputTokens: 100,
+      };
 
-    const model = genAI.getGenerativeModel({
-      model: GoogleAI.Model.Gemini20ProExp,
-      ...generationConfig,
-      tools: [
-        {
-          codeExecution: {},
-        },
-      ],
-    });
-
-    const prompt = {
-      contents: [
-        { 
-          role: 'user', 
-          parts: [
-            {
-              inlineData: {
-                mimeType: 'text/csv',
-                data: csv,
-              },
-            },
-            {
-              text: "Create a line plot using Matplotlib to visualize the change in stock price for Apple (AAPL), with the x-axis as dates and the y-axis as stock price. Use data from the file and include a title and axis labels.",
-            }
-          ] 
-        }
-      ],
-    };
-
-    const result = await model.generateContent(prompt);
-    // visualise Matplot diagram as output image
-    // https://jaredwinick.github.io/base64-image-viewer/
-    let base64ImageString = "data:image/png;base64,";
-    if (result){
-      result.response.candidates?.[0].content.parts.forEach(element => {
-        if (element.inlineData && element.inlineData.mimeType=="image/png"){
-          base64ImageString += element.inlineData?.data;
-        }
+      const model = genAI.getGenerativeModel({
+        model: GoogleAI.Model.Gemini20ProExp,
+        ...generationConfig,
+        tools: [
+          {
+            codeExecution: {},
+          },
+        ],
       });
-    }
-    console.log(base64ImageString);
-    console.log(result.response.text());
-  }
 
+      const prompt = {
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  mimeType: 'text/csv',
+                  data: csv,
+                },
+              },
+              {
+                text:
+                  'Create a line plot using Matplotlib to visualize the change in stock price for Apple (AAPL), with the x-axis as dates and the y-axis as stock price. Use data from the file and include a title and axis labels.',
+              },
+            ],
+          },
+        ],
+      };
+
+      const result = await model.generateContent(prompt);
+      
+      // visualise Matplot diagram as output image
+      // https://jaredwinick.github.io/base64-image-viewer/
+      let base64ImageString = 'data:image/png;base64,';
+      if (result?.response?.candidates) {
+        result.response.candidates.forEach((candidate) => {
+          candidate.content.parts.forEach((part) => {
+            if (part.inlineData?.mimeType === 'image/png') {
+              base64ImageString += part.inlineData.data;
+            }
+          });
+        });
+      }
+      console.log(base64ImageString);
+      console.log(result.response.text());
+    } catch (error) {
+      console.error('Error during Gemini Pro Code Execution with CSV:', error);
+    }
+  }
 
   ////////////////////////////////////////////////////////
   // VertexAI - requires Google Cloud Account + Setup
