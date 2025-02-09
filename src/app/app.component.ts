@@ -35,7 +35,7 @@ export class AppComponent implements OnInit {
     // (⌘ + /) Toggle line comments to test different Gemini APIs.
 
     // Google AI
-    // this.TestGeminiPro();
+    //this.TestGeminiPro();
     //this.TestGeminiProChat();
     //this.TestGeminiProVisionImages();
     //this.TestGeminiProStreaming();
@@ -44,7 +44,7 @@ export class AppComponent implements OnInit {
     //this.TestGeminiProCodeExecution();
     //this.TestGeminiProCodeExecutionCSV();
 
-    this.TestGeminiProFunctionCalling();
+    //this.TestGeminiProFunctionCallingWeather();
 
     // Vertex AI
     //this.TestGeminiProWithVertexAIViaREST();
@@ -368,7 +368,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  async TestGeminiProFunctionCalling() {
+  async TestGeminiProFunctionCallingWeather() {
     // Use this approach to:
     //   1) Create a simplified RAG system to integrate external data.
     //   2) Create a simple agent to use external tools or execute a set of predefined actions.
@@ -491,6 +491,7 @@ export class AppComponent implements OnInit {
       }
     }
   }
+
 
   analyzeSafetyRatings(response: any) {
     const safetyRatings = response.promptFeedback?.safetyRatings;
