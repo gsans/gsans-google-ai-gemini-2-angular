@@ -38,7 +38,7 @@ export class AppComponent implements OnInit {
     // (⌘ + /) Toggle line comments to test different Gemini APIs.
 
     // Google AI
-    //this.TestGeminiPro();
+    this.TestGeminiPro();
     //this.TestGeminiProSystemInstructions();
     //this.TestGeminiProChat();
     //this.TestGeminiProVisionImages();
@@ -49,7 +49,7 @@ export class AppComponent implements OnInit {
     //this.TestGeminiProCodeExecutionCSV();
 
     //this.TestGeminiProFunctionCallingWeather();
-    this.TestGeminiProGroundingSearch();
+    //this.TestGeminiProGroundingSearch(); // only works with Gemini 1.5 at this time
 
     // Vertex AI
     //this.TestGeminiProWithVertexAIViaREST();
@@ -569,9 +569,10 @@ export class AppComponent implements OnInit {
         ...generationConfig,
       }
     );
+    const chat = model.startChat();
 
     const prompt = 'What is the largest number with a name?';
-    const result = await model.generateContent(prompt);
+    const result = await chat.sendMessage(prompt);
     console.log(result);
     console.log(result.response.text());
     console.log(result.response?.candidates?.[0].groundingMetadata);
