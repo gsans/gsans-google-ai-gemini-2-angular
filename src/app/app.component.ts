@@ -36,6 +36,7 @@ export class AppComponent implements OnInit {
 
     // Google AI
     //this.TestGeminiPro();
+    //this.TestGeminiProSystemInstructions();
     //this.TestGeminiProChat();
     //this.TestGeminiProVisionImages();
     //this.TestGeminiProStreaming();
@@ -68,6 +69,31 @@ export class AppComponent implements OnInit {
     };
     const model = genAI.getGenerativeModel({
       model: GoogleAI.Model.Gemini20ProExp,
+      ...generationConfig,
+    });
+
+    const prompt = 'What is the largest number with a name?';
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    console.log(response.candidates?.[0].content.parts[0].text);
+    console.log(response.text());
+  }
+
+  async TestGeminiProSystemInstructions() {
+    // Gemini Client
+    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+      maxOutputTokens: 100,
+    };
+    const model = genAI.getGenerativeModel({
+      model: GoogleAI.Model.Gemini20ProExp,
+      systemInstruction: "Respond in the style of a pirate.",
       ...generationConfig,
     });
 
