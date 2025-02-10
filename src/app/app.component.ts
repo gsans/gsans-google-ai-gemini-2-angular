@@ -9,12 +9,14 @@ import {
   HarmCategory,
   SchemaType,
   FunctionCallingMode,
+  DynamicRetrievalMode,
 } from '@google/generative-ai';
 import { environment } from '../environments/environment.development';
 import { GEMINI_PROMO } from './video-data';
 
 import { FileConversionService } from './file-conversion.service';
 import { GoogleAI } from './models.constants';
+import { GoogleSearchOutputParserService } from '../grounding-formatter.service';
 
 @Component({
   selector: 'app-root',
@@ -28,7 +30,8 @@ export class AppComponent implements OnInit {
   constructor(
     public http: HttpClient,
     private fileConversionService: FileConversionService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private parserService: GoogleSearchOutputParserService
   ) { }
 
   ngOnInit(): void {
@@ -46,6 +49,7 @@ export class AppComponent implements OnInit {
     //this.TestGeminiProCodeExecutionCSV();
 
     //this.TestGeminiProFunctionCallingWeather();
+    this.TestGeminiProGroundingSearch();
 
     // Vertex AI
     //this.TestGeminiProWithVertexAIViaREST();
@@ -449,6 +453,7 @@ export class AppComponent implements OnInit {
         },
       ],
       toolConfig: {
+
         functionCallingConfig: {
           // (⌘ + /) Toggle line comments to test different function calling modes.
 
@@ -516,6 +521,61 @@ export class AppComponent implements OnInit {
         console.log(`Raw API: (${formattedDate}) Temperature in (${callResponse.location}) is (${callResponse.temperature}).`);
       }
     }
+  }
+
+  async TestGeminiProGroundingSearch() {
+    // Gemini Client
+    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+
+    const toolConfig = {
+      tools: [
+        {
+          googleSearchRetrieval: {
+            dynamicRetrievalConfig: {
+              // (⌘ + /) Toggle line comments to test different function calling modes.
+
+              // (default) Run retrieval only when system decides it is necessary using a threshold.
+              // The threshold to be used in dynamic retrieval. Default: 0.3
+              mode: DynamicRetrievalMode.MODE_DYNAMIC,
+              dynamicThreshold: 0.3, 
+
+              // // Always trigger retrieval even if it's not used.
+              // mode: DynamicRetrievalMode.MODE_UNSPECIFIED,
+            },
+          },
+        },
+      ],
+    }
+
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+      maxOutputTokens: 100,
+
+      ...toolConfig,
+    };
+
+    const model = genAI.getGenerativeModel({
+        // model: GoogleAI.Model.Gemini15ProExp,
+        model: GoogleAI.Model.Gemini15Flash, 
+
+        // // Warning: Gemini 2 models don't support grounding search
+        // model: GoogleAI.Model.Gemini20ProExp, 
+
+        ...generationConfig,
+      }
+    );
+
+    const prompt = 'What is the largest number with a name?';
+    const result = await model.generateContent(prompt);
+    console.log(result);
+    console.log(result.response.text());
+    console.log(result.response?.candidates?.[0].groundingMetadata);
+    console.log(this.parserService.parse(result.response));
   }
 
 

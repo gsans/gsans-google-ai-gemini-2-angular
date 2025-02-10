@@ -5,6 +5,7 @@ export namespace GoogleAI {
     Gemini20FlashLitePreview = "gemini-2.0-flash-lite-preview-02-05",
     Gemini20ProExp = 'gemini-2.0-pro-exp-02-05',
     // Note: gemini-2.0-flash-thinking-exp-01-21 is using a different API
+    Gemini15Flash = 'gemini-1.5-flash-002',
     
     //Preview Models
     Gemini20FlashExp = 'gemini-2.0-flash-exp',
