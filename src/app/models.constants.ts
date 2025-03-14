@@ -2,6 +2,7 @@ export namespace GoogleAI {
   export enum Model {
     // Official Models
     Gemini20Flash = "gemini-2.0-flash",
+    Gemini20Flash001 = 'gemini-2.0-flash-001',
     Gemini20FlashLitePreview = "gemini-2.0-flash-lite-preview-02-05",
     Gemini20ProExp = 'gemini-2.0-pro-exp-02-05',
     // Note: gemini-2.0-flash-thinking-exp-01-21 is using a different API

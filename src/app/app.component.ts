@@ -3,6 +3,8 @@ import { RouterOutlet } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 
+import { GoogleGenAI } from '@google/genai';
+
 import {
   GoogleGenerativeAI,
   HarmBlockThreshold,
@@ -52,6 +54,7 @@ export class AppComponent implements OnInit {
     //this.TestGeminiProGroundingSearch(); // only works with Gemini 1.5 at this time
 
     // Vertex AI
+    //this.TestGeminiProVertexAI();
     //this.TestGeminiProWithVertexAIViaREST();
   }
 
@@ -59,9 +62,12 @@ export class AppComponent implements OnInit {
   // Google AI - requires API KEY from Google AI Studio
   ////////////////////////////////////////////////////////
 
+  
   async TestGeminiPro() {
     // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
     const generationConfig = {
       safetySettings: [
         {
@@ -71,16 +77,15 @@ export class AppComponent implements OnInit {
       ],
       maxOutputTokens: 100,
     };
-    const model = genAI.getGenerativeModel({
-      model: GoogleAI.Model.Gemini20ProExp,
-      ...generationConfig,
-    });
 
     const prompt = 'What is the largest number with a name?';
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    console.log(response.candidates?.[0].content.parts[0].text);
-    console.log(response.text());
+    const response = await ai.models.generateContent({
+      model:  GoogleAI.Model.Gemini20Flash001,
+      contents: prompt,
+      config: generationConfig,
+    });
+    console.log(response?.candidates?.[0].content?.parts?.[0].text);
+    console.log(response.text);
   }
 
   async TestGeminiProSystemInstructions() {
@@ -596,6 +601,41 @@ export class AppComponent implements OnInit {
   ////////////////////////////////////////////////////////
   // VertexAI - requires Google Cloud Account + Setup
   ////////////////////////////////////////////////////////
+
+  async TestGeminiProVertexAI() {
+    // Gemini Client
+    const ai = new GoogleGenAI({
+      vertexai: true,
+      apiKey: environment.API_KEY,
+      project: environment.PROJECT_ID,
+      location: 'us-central1',
+      // httpOptions: {
+      //   apiVersion: 'v1',
+      //   headers: {
+      //     Authorization: `Bearer ${ environment.GCLOUD_AUTH_PRINT_ACCESS_TOKEN }`,
+      //     AccessControlAllowOrigin: 'no-cors',
+      //   }
+      // },
+    });
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+      maxOutputTokens: 100,
+    };
+
+    const prompt = 'What is the largest number with a name?';
+    const response = await ai.models.generateContent({
+      model:  GoogleAI.Model.Gemini20Flash001,
+      contents: prompt,
+      config: generationConfig,
+    });
+    console.log(response?.candidates?.[0].content?.parts?.[0].text);
+    console.log(response.text);    
+  }
 
   async TestGeminiProWithVertexAIViaREST() {
     // Docs: https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/gemini#request_body
