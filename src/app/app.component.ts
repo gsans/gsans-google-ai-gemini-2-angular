@@ -485,7 +485,7 @@ export class AppComponent implements OnInit {
     };
 
     const model = genAI.getGenerativeModel({
-      model: GoogleAI.Model.Gemini20ProExp,
+      model: GoogleAI.Model.Gemini20Flash,
       ...generationConfig,
     });
     const chat = model.startChat();
