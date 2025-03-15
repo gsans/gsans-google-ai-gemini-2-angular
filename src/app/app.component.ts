@@ -40,11 +40,12 @@ export class AppComponent implements OnInit {
     // (⌘ + /) Toggle line comments to test different Gemini APIs.
 
     // Google AI
-    this.TestGeminiPro();
+    //this.TestGeminiPro();
     //this.TestGeminiProSystemInstructions();
     //this.TestGeminiProChat();
+    //this.TestGeminiEmbeddings();
     //this.TestGeminiProVisionImages();
-    //this.TestGeminiProStreaming();
+    this.TestGeminiProTextStreaming();
 
     //this.TestGeminiProStructuredOutput();
     //this.TestGeminiProCodeExecution();
@@ -80,7 +81,7 @@ export class AppComponent implements OnInit {
 
     const prompt = 'What is the largest number with a name?';
     const response = await ai.models.generateContent({
-      model:  GoogleAI.Model.Gemini20Flash001,
+      model: GoogleAI.Model.Gemini20Flash001,
       contents: prompt,
       config: generationConfig,
     });
@@ -90,7 +91,35 @@ export class AppComponent implements OnInit {
 
   async TestGeminiProSystemInstructions() {
     // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+      maxOutputTokens: 100,
+      systemInstruction: "Respond in the style of a pirate.",
+    };
+
+    const prompt = 'What is the largest number with a name?';
+    const response = await ai.models.generateContent({
+      model: GoogleAI.Model.Gemini20Flash001,
+      contents: prompt,
+      config: generationConfig,
+    });
+    console.log(response?.candidates?.[0].content?.parts?.[0].text);
+    console.log(response.text);
+  }
+
+  async TestGeminiProChat() {
+    // Gemini Client
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
     const generationConfig = {
       safetySettings: [
         {
@@ -100,37 +129,8 @@ export class AppComponent implements OnInit {
       ],
       maxOutputTokens: 100,
     };
-    const model = genAI.getGenerativeModel({
-      model: GoogleAI.Model.Gemini20ProExp,
-      systemInstruction: "Respond in the style of a pirate.",
-      ...generationConfig,
-    });
 
-    const prompt = 'What is the largest number with a name?';
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    console.log(response.candidates?.[0].content.parts[0].text);
-    console.log(response.text());
-  }
-
-  async TestGeminiProChat() {
-    // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
-    const generationConfig = {
-      safetySettings: [
-        {
-          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-        },
-      ],
-      //maxOutputTokens: 100,
-    };
-    const model = genAI.getGenerativeModel({
-      model: GoogleAI.Model.Gemini20ProExp,
-      ...generationConfig,
-    });
-
-    const chat = model.startChat({
+    const chatOptions = {
       history: [
         {
           role: "user",
@@ -145,16 +145,42 @@ export class AppComponent implements OnInit {
           ]
         },
       ],
-      generationConfig: {
-        maxOutputTokens: 100,
+      config: {
+        ...generationConfig,
       },
+    };
+
+    const chat = ai.chats.create({
+      model: GoogleAI.Model.Gemini20Flash,
+      ...chatOptions,
     });
 
     const prompt = 'What is the largest number with a name? Brief answer.';
-    const result = await chat.sendMessage(prompt);
-    const response = await result.response;
-    console.log(response.candidates?.[0].content.parts[0].text);
-    console.log(response.text());
+    const response = await chat.sendMessage({
+      message: prompt
+    });
+    console.log(response?.candidates?.[0].content?.parts?.[0].text);
+    console.log(response.text);
+
+    const history = chat.getHistory();
+    for (const content of history) {
+      console.debug('chat history: ', JSON.stringify(content, null, 2));
+    }
+  }
+
+  async TestGeminiEmbeddings() {
+    // Gemini Client
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
+
+    // Embeddings are used to feed RAG search systems, recommendation systems, and more.
+    const prompt = 'What is the largest number with a name?';
+    const response = await ai.models.embedContent({
+      model: GoogleAI.Embeddings.TextEmbedding005,
+      contents: prompt,
+    });
+    console.log(JSON.stringify(response));    
   }
 
   async TestGeminiProVisionImages() {
@@ -170,7 +196,9 @@ export class AppComponent implements OnInit {
       }
 
       // Gemini Client
-      const genAI = new GoogleGenerativeAI(environment.API_KEY);
+      const ai = new GoogleGenAI({
+        apiKey: environment.API_KEY
+      });
       const generationConfig = {
         safetySettings: [
           {
@@ -180,9 +208,12 @@ export class AppComponent implements OnInit {
         ],
         maxOutputTokens: 100,
       };
-      const model = genAI.getGenerativeModel({
+
+      const chat = ai.chats.create({
         model: GoogleAI.Model.Gemini20ProExp,
-        ...generationConfig,
+        config: {
+          ...generationConfig,
+        }
       });
 
       let prompt = [
@@ -197,18 +228,21 @@ export class AppComponent implements OnInit {
         },
       ];
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      console.log(response.candidates?.[0].content.parts[0].text);
+      const response = await chat.sendMessage({
+        message: prompt
+      });
+      console.log(response?.candidates?.[0].content?.parts?.[0].text);
       console.log(response);
     } catch (error) {
       console.error('Error converting file to Base64', error);
     }
   }
 
-  async TestGeminiProStreaming() {
+  async TestGeminiProTextStreaming() {
     // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
     const generationConfig = {
       safetySettings: [
         {
@@ -221,27 +255,65 @@ export class AppComponent implements OnInit {
       top_k: 32,
       maxOutputTokens: 100,
     };
-    const model = genAI.getGenerativeModel({
-      model: GoogleAI.Model.Gemini20ProExp,
-      ...generationConfig,
-    });
 
-    const prompt = {
-      contents: [
+    const prompt = [
+      {
+        role: 'user',
+        parts: [
+          {
+            text: 'Generate a poem.',
+          },
+        ],
+      },
+    ];
+    const streamingResp = await ai.models.generateContentStream({
+      model: GoogleAI.Model.Gemini20ProExp,
+      contents: prompt,
+      config: generationConfig,
+    });
+    for await (const chunk of streamingResp) {
+      console.log('stream chunk: ' + chunk.text);
+    }
+  }
+
+  async TestGeminiProChatStreaming() {
+    // Gemini Client
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
+    const generationConfig = {
+      safetySettings: [
         {
-          role: 'user',
-          parts: [
-            {
-              text: 'Generate a poem.',
-            },
-          ],
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
         },
       ],
+      temperature: 0.9,
+      top_p: 1,
+      top_k: 32,
+      maxOutputTokens: 100,
     };
-    const streamingResp = await model.generateContentStream(prompt);
 
-    for await (const item of streamingResp.stream) {
-      console.log('stream chunk: ' + item.text());
+    const prompt = [
+      {
+        text: 'Generate a poem.',
+      },
+    ];
+    const chat = ai.chats.create({
+      model: GoogleAI.Model.Gemini20ProExp,
+      config: generationConfig,
+    });
+    
+    const streamingResp = await chat.sendMessageStream({
+      message: prompt,
+    });
+    for await (const chunk of streamingResp) {
+      console.log('stream chunk: ' + chunk.text);
+    }
+
+    const history = chat.getHistory();
+    for (const content of history) {
+      console.debug('chat history: ', JSON.stringify(content, null, 2));
     }
   }
 
@@ -629,7 +701,7 @@ export class AppComponent implements OnInit {
 
     const prompt = 'What is the largest number with a name?';
     const response = await ai.models.generateContent({
-      model:  GoogleAI.Model.Gemini20Flash001,
+      model: GoogleAI.Model.Gemini20Flash001,
       contents: prompt,
       config: generationConfig,
     });

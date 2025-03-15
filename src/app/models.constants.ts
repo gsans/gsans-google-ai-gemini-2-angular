@@ -12,4 +12,10 @@ export namespace GoogleAI {
     Gemini20FlashExp = 'gemini-2.0-flash-exp',
     Gemini15ProExp = 'gemini-1.5-pro-002',
   }
+  export enum Embeddings {
+    TextEmbedding004 = 'text-embedding-004',
+    TextEmbedding005 = 'text-embedding-005',
+    TextMultilingualEmbedding002 = 'text-multilingual-embedding-002',
+    TextEmbeddingLargeExp0307 = 'text-embedding-large-exp-03-07',
+  }
 }
