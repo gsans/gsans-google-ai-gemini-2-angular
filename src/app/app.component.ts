@@ -50,10 +50,11 @@ export class AppComponent implements OnInit {
     //this.TestGeminiSystemInstructions();
     //this.TestGeminiChat();
     //this.TestGeminiEmbeddings();
-    //this.TestGeminiVisionImages();
+    //this.TestGeminiInputImages();
     //this.TestGeminiTextStreaming();
     //this.TestGeminiChatStreaming();
 
+    // Tools
     //this.TestGeminiStructuredOutput();
     //this.TestGeminiCodeExecution();
     //this.TestGeminiCodeExecutionCSV();
@@ -61,6 +62,10 @@ export class AppComponent implements OnInit {
     //this.TestGeminiFunctionCallingWeather();
     //this.TestGeminiGoogleSearchRetrieval(); // only works with Gemini 1.5 at this time
     //this.TestGeminiGoogleSearch();
+
+    // Image generation
+    //this.TestImagen3ImageGeneration();
+    //this.TestGeminiImageGeneration();
 
     // Vertex AI
     //this.TestGeminiVertexAI();
@@ -191,7 +196,7 @@ export class AppComponent implements OnInit {
     console.log(JSON.stringify(response));    
   }
 
-  async TestGeminiVisionImages() {
+  async TestGeminiInputImages() {
     try {
       let imageBase64 = await this.fileConversionService.convertToBase64(
         'baked_goods_2.jpeg'
@@ -754,6 +759,49 @@ export class AppComponent implements OnInit {
     console.log(this.parserService.parse(response));
   }
 
+  async TestImagen3ImageGeneration() {  
+    // Gemini Client
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY});
+
+    const response = await ai.models.generateImages({
+      model: 'imagen-3.0-generate-002', // latest model
+      config: {
+        numberOfImages: 1, // 1-4
+        aspectRatio: '16:9', // 1:1, 4:3, 3:4, 16:9, 9:16
+      },
+      prompt: 'Generate a picture of a cat surfing.',
+    });
+
+    // To visualise the image use the following link
+    // https://jaredwinick.github.io/base64-image-viewer/
+    const image = response?.generatedImages![0]?.image!.imageBytes!;
+    if (image) {
+      let base64ImageString = 'data:image/png;base64,' + image;
+      console.log(base64ImageString);
+    }
+  }
+
+  async TestGeminiImageGeneration() {
+    // Gemini Client
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
+
+    const response = await ai.models.generateContent({
+      model: GoogleAI.Model.Gemini20FlashExp,
+      config: {
+        responseModalities: ['text', 'image']
+      },
+      contents: 'Generate a picture of a cat skiing.',
+    });
+
+    // To visualise the image use the following link
+    // https://jaredwinick.github.io/base64-image-viewer/
+    const image = response.candidates![0]!.content!.parts!.find((p) => p.inlineData)!
+      .inlineData!.data!
+    if (image) {
+      let base64ImageString = 'data:image/png;base64,' + image;
+      console.log(base64ImageString);
+    }
+  }
 
   analyzeSafetyRatings(response: any) {
     const safetyRatings = response.promptFeedback?.safetyRatings;
