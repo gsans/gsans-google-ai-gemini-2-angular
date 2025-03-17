@@ -53,6 +53,7 @@ export class AppComponent implements OnInit {
     //this.TestGeminiInputImages();
     //this.TestGeminiTextStreaming();
     //this.TestGeminiChatStreaming();
+    //this.TestGeminiInputYouTubeUri();
 
     // Tools
     //this.TestGeminiStructuredOutput();
@@ -79,9 +80,7 @@ export class AppComponent implements OnInit {
   
   async TestGemini() {
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
     const generationConfig = {
       safetySettings: [
         {
@@ -104,9 +103,7 @@ export class AppComponent implements OnInit {
 
   async TestGeminiSystemInstructions() {
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
     const generationConfig = {
       safetySettings: [
         {
@@ -130,9 +127,7 @@ export class AppComponent implements OnInit {
 
   async TestGeminiChat() {
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
     const generationConfig = {
       safetySettings: [
         {
@@ -183,9 +178,7 @@ export class AppComponent implements OnInit {
 
   async TestGeminiEmbeddings() {
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
 
     // Embeddings are used to feed RAG search systems, recommendation systems, and more.
     const prompt = 'What is the largest number with a name?';
@@ -209,9 +202,7 @@ export class AppComponent implements OnInit {
       }
 
       // Gemini Client
-      const ai = new GoogleGenAI({
-        apiKey: environment.API_KEY
-      });
+      const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
       const generationConfig = {
         safetySettings: [
           {
@@ -253,9 +244,7 @@ export class AppComponent implements OnInit {
 
   async TestGeminiTextStreaming() {
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
     const generationConfig = {
       safetySettings: [
         {
@@ -291,9 +280,7 @@ export class AppComponent implements OnInit {
 
   async TestGeminiChatStreaming() {
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
     const generationConfig = {
       safetySettings: [
         {
@@ -330,6 +317,27 @@ export class AppComponent implements OnInit {
     }
   }
 
+  async TestGeminiInputYouTubeUri() {
+    // Gemini Client
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY});
+
+    const response = await ai.models.generateContent({
+      model: GoogleAI.Model.Gemini20FlashExp,
+      contents: [
+        'Describe this video',
+        {
+          fileData: {
+            fileUri: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+          }
+        }
+      ],
+      config: {
+        responseModalities: ['text']
+      }
+    })
+    console.log(response.text);  
+  }
+
   async TestGeminiStructuredOutput() {
     // Documentation: 
     //   https://ai.google.dev/gemini-api/docs/structured-output?lang=node
@@ -352,9 +360,7 @@ export class AppComponent implements OnInit {
     };
 
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
     const generationConfig = {
       safetySettings: [
         {
@@ -383,9 +389,7 @@ export class AppComponent implements OnInit {
     //   https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution
 
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
     const generationConfig = {
       safetySettings: [
         {
@@ -430,9 +434,7 @@ export class AppComponent implements OnInit {
       }
 
       // Gemini Client
-      const ai = new GoogleGenAI({
-        apiKey: environment.API_KEY
-      });
+      const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
       const generationConfig = {
         safetySettings: [
           {
@@ -497,9 +499,7 @@ export class AppComponent implements OnInit {
     //   2) Create a simple agent to use external tools or execute a set of predefined actions.
 
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
 
     // Define the function to be called.
     // Following the specificication at https://spec.openapis.org/oas/v3.0.3
@@ -643,9 +643,7 @@ export class AppComponent implements OnInit {
 
   async TestGeminiGoogleSearchRetrieval() {
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
 
     const toolConfig = {
       tools: [
@@ -708,9 +706,7 @@ export class AppComponent implements OnInit {
 
   async TestGeminiGoogleSearch() {
     // Gemini Client
-    const ai = new GoogleGenAI({
-      apiKey: environment.API_KEY
-    });
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
 
     const toolConfig = {
       tools: [
@@ -788,7 +784,7 @@ export class AppComponent implements OnInit {
     const response = await ai.models.generateContent({
       model: GoogleAI.Model.Gemini20FlashExp,
       config: {
-        responseModalities: ['text', 'image']
+        responseModalities: ['text', 'image'],
       },
       contents: 'Generate a picture of a cat skiing.',
     });
