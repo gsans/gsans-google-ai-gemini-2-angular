@@ -3,7 +3,13 @@ import { RouterOutlet } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 
-import { GoogleGenAI } from '@google/genai';
+import { 
+  GoogleGenAI, 
+  Type,
+  FunctionCallingConfigMode,
+  FunctionDeclaration,
+  DynamicRetrievalConfigMode,
+} from '@google/genai';
 
 import {
   GoogleGenerativeAI,
@@ -40,23 +46,25 @@ export class AppComponent implements OnInit {
     // (⌘ + /) Toggle line comments to test different Gemini APIs.
 
     // Google AI
-    //this.TestGeminiPro();
-    //this.TestGeminiProSystemInstructions();
-    //this.TestGeminiProChat();
+    this.TestGemini();
+    //this.TestGeminiSystemInstructions();
+    //this.TestGeminiChat();
     //this.TestGeminiEmbeddings();
-    //this.TestGeminiProVisionImages();
-    this.TestGeminiProTextStreaming();
+    //this.TestGeminiVisionImages();
+    //this.TestGeminiTextStreaming();
+    //this.TestGeminiChatStreaming();
 
-    //this.TestGeminiProStructuredOutput();
-    //this.TestGeminiProCodeExecution();
-    //this.TestGeminiProCodeExecutionCSV();
+    //this.TestGeminiStructuredOutput();
+    //this.TestGeminiCodeExecution();
+    //this.TestGeminiCodeExecutionCSV();
 
-    //this.TestGeminiProFunctionCallingWeather();
-    //this.TestGeminiProGroundingSearch(); // only works with Gemini 1.5 at this time
+    //this.TestGeminiFunctionCallingWeather();
+    //this.TestGeminiGoogleSearchRetrieval(); // only works with Gemini 1.5 at this time
+    //this.TestGeminiGoogleSearch();
 
     // Vertex AI
-    //this.TestGeminiProVertexAI();
-    //this.TestGeminiProWithVertexAIViaREST();
+    //this.TestGeminiVertexAI();
+    //this.TestGeminiWithVertexAIViaREST();
   }
 
   ////////////////////////////////////////////////////////
@@ -64,7 +72,7 @@ export class AppComponent implements OnInit {
   ////////////////////////////////////////////////////////
 
   
-  async TestGeminiPro() {
+  async TestGemini() {
     // Gemini Client
     const ai = new GoogleGenAI({
       apiKey: environment.API_KEY
@@ -89,7 +97,7 @@ export class AppComponent implements OnInit {
     console.log(response.text);
   }
 
-  async TestGeminiProSystemInstructions() {
+  async TestGeminiSystemInstructions() {
     // Gemini Client
     const ai = new GoogleGenAI({
       apiKey: environment.API_KEY
@@ -115,7 +123,7 @@ export class AppComponent implements OnInit {
     console.log(response.text);
   }
 
-  async TestGeminiProChat() {
+  async TestGeminiChat() {
     // Gemini Client
     const ai = new GoogleGenAI({
       apiKey: environment.API_KEY
@@ -183,7 +191,7 @@ export class AppComponent implements OnInit {
     console.log(JSON.stringify(response));    
   }
 
-  async TestGeminiProVisionImages() {
+  async TestGeminiVisionImages() {
     try {
       let imageBase64 = await this.fileConversionService.convertToBase64(
         'baked_goods_2.jpeg'
@@ -238,7 +246,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  async TestGeminiProTextStreaming() {
+  async TestGeminiTextStreaming() {
     // Gemini Client
     const ai = new GoogleGenAI({
       apiKey: environment.API_KEY
@@ -276,7 +284,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  async TestGeminiProChatStreaming() {
+  async TestGeminiChatStreaming() {
     // Gemini Client
     const ai = new GoogleGenAI({
       apiKey: environment.API_KEY
@@ -317,19 +325,19 @@ export class AppComponent implements OnInit {
     }
   }
 
-  async TestGeminiProStructuredOutput() {
+  async TestGeminiStructuredOutput() {
     // Documentation: 
     //   https://ai.google.dev/gemini-api/docs/structured-output?lang=node
     //   https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/control-generated-output
 
     const schema = {
       description: "List of recipes",
-      type: SchemaType.ARRAY,
+      type: Type.ARRAY,
       items: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
           recipeName: {
-            type: SchemaType.STRING,
+            type: Type.STRING,
             description: "Name of the recipe",
             nullable: false,
           },
@@ -339,7 +347,9 @@ export class AppComponent implements OnInit {
     };
 
     // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
     const generationConfig = {
       safetySettings: [
         {
@@ -348,27 +358,29 @@ export class AppComponent implements OnInit {
         },
       ],
       maxOutputTokens: 100,
+
       responseMimeType: "application/json",
       responseSchema: schema,
     };
 
-    const model = genAI.getGenerativeModel({
-      model: GoogleAI.Model.Gemini20ProExp,
-      ...generationConfig,
-    });
-
     const prompt = "List a few popular cookie recipes.";
-    const result = await model.generateContent(prompt);
-    console.log(result.response.text());
+    const response = await ai.models.generateContent({
+      model: GoogleAI.Model.Gemini20ProExp,
+      contents: prompt,
+      config: generationConfig,
+    });
+    console.log(response.text);
   }
 
-  async TestGeminiProCodeExecution() {
+  async TestGeminiCodeExecution() {
     // Documentation: 
     //   https://ai.google.dev/gemini-api/docs/code-execution?lang=node
     //   https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution
 
     // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
     const generationConfig = {
       safetySettings: [
         {
@@ -377,24 +389,24 @@ export class AppComponent implements OnInit {
         },
       ],
       maxOutputTokens: 100,
-    };
 
-    const model = genAI.getGenerativeModel({
-      model: GoogleAI.Model.Gemini20ProExp,
-      ...generationConfig,
       tools: [
         {
           codeExecution: {},
         },
       ],
-    });
+    };
 
     const prompt = "What is the sum of the first 50 prime numbers? Generate and run code for the calculation, and make sure you get all 50.";
-    const result = await model.generateContent(prompt);
-    console.log(result.response.text());
+    const response = await ai.models.generateContent({
+      model: GoogleAI.Model.Gemini20ProExp,
+      contents: prompt,
+      config: generationConfig,
+    });
+    console.log(response.text);
   }
 
-  async TestGeminiProCodeExecutionCSV() {
+  async TestGeminiCodeExecutionCSV() {
     // Documentation:
     //   https://ai.google.dev/gemini-api/docs/code-execution?lang=node
     //   https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution
@@ -413,7 +425,9 @@ export class AppComponent implements OnInit {
       }
 
       // Gemini Client
-      const genAI = new GoogleGenerativeAI(environment.API_KEY);
+      const ai = new GoogleGenAI({
+        apiKey: environment.API_KEY
+      });
       const generationConfig = {
         safetySettings: [
           {
@@ -421,47 +435,44 @@ export class AppComponent implements OnInit {
             threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
           },
         ],
-        maxOutputTokens: 100,
-      };
+        //maxOutputTokens: 100,
 
-      const model = genAI.getGenerativeModel({
-        model: GoogleAI.Model.Gemini20ProExp,
-        ...generationConfig,
         tools: [
           {
             codeExecution: {},
           },
         ],
-      });
-
-      const prompt = {
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              {
-                inlineData: {
-                  mimeType: 'text/csv',
-                  data: csv,
-                },
-              },
-              {
-                text:
-                  'Create a line plot using Matplotlib to visualize the change in stock price for Apple (AAPL), with the x-axis as dates and the y-axis as stock price. Use data from the file and include a title and axis labels.',
-              },
-            ],
-          },
-        ],
       };
 
-      const result = await model.generateContent(prompt);
+      const prompt = [
+        {
+          role: 'user',
+          parts: [
+            {
+              inlineData: {
+                mimeType: 'text/csv',
+                data: csv,
+              },
+            },
+            {
+              text:
+                'Create a line plot using Matplotlib to visualize the change in stock price for Apple (AAPL), with the x-axis as dates and the y-axis as stock price. Use data from the file and include a title and axis labels.',
+            },
+          ],
+        },
+      ];
 
+      const response = await ai.models.generateContent({
+        model: GoogleAI.Model.Gemini20ProExp,
+        contents: prompt,
+        config: generationConfig,
+      });
       // visualise Matplot diagram as output image
       // https://jaredwinick.github.io/base64-image-viewer/
       let base64ImageString = 'data:image/png;base64,';
-      if (result?.response?.candidates) {
-        result.response.candidates.forEach((candidate) => {
-          candidate.content.parts.forEach((part) => {
+      if (response?.candidates) {
+        response.candidates.forEach((candidate) => {
+          candidate?.content?.parts?.forEach((part) => {
             if (part.inlineData?.mimeType === 'image/png') {
               base64ImageString += part.inlineData.data;
             }
@@ -469,19 +480,21 @@ export class AppComponent implements OnInit {
         });
       }
       console.log(base64ImageString);
-      console.log(result.response.text());
+      console.log(response.text);
     } catch (error) {
       console.error('Error during Gemini Pro Code Execution with CSV:', error);
     }
   }
 
-  async TestGeminiProFunctionCallingWeather() {
+  async TestGeminiFunctionCallingWeather() {
     // Use this approach to:
     //   1) Create a simplified RAG system to integrate external data.
     //   2) Create a simple agent to use external tools or execute a set of predefined actions.
 
     // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
 
     // Define the function to be called.
     // Following the specificication at https://spec.openapis.org/oas/v3.0.3
@@ -489,14 +502,14 @@ export class AppComponent implements OnInit {
       name: "getCurrentWeather",
       description: "Get the current weather in a given location",
       parameters: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
           location: {
-            type: SchemaType.STRING,
+            type: Type.STRING,
             description: "The city and state, e.g. San Francisco, CA",
           },
           unit: {
-            type: SchemaType.STRING,
+            type: Type.STRING,
             enum: ["celsius", "fahrenheit"],
             description: "The temperature unit to use. Infer this from the users location.",
           },
@@ -535,16 +548,16 @@ export class AppComponent implements OnInit {
           // (⌘ + /) Toggle line comments to test different function calling modes.
 
           // (default) Generates an unstructured output or a single function call as defined in "functionDeclarations".
-          mode: FunctionCallingMode.AUTO,
+          mode: FunctionCallingConfigMode.AUTO,
 
           // // Generates a single function call as defined in "tools.functionDeclarations". 
           // // The function must be whitelisted below.
           // // Warning: unstructured outputs are not possible using this option.
-          // mode: FunctionCallingMode.ANY,
+          // mode: FunctionCallingConfigMode.ANY,
           // allowedFunctionNames: ["getCurrentWeather"],
 
           // // Effectively disables the "tools.functionDeclarations".
-          // mode: FunctionCallingMode.NONE,
+          // mode: FunctionCallingConfigMode.NONE,
         },
       }
     }
@@ -561,38 +574,61 @@ export class AppComponent implements OnInit {
       ...toolConfig,
     };
 
-    const model = genAI.getGenerativeModel({
+    const chatOptions = {
+      history: [
+        {
+          role: "user",
+          parts: [
+            { text: "Hi there!" },
+          ]
+        },
+        {
+          role: "model",
+          parts: [
+            { text: "Great to meet you. What would you like to know?" },
+          ]
+        },
+      ],
+      config: {
+        ...generationConfig,
+      },
+    };
+
+    const chat = ai.chats.create({
       model: GoogleAI.Model.Gemini20Flash,
-      ...generationConfig,
+      ...chatOptions,
     });
-    const chat = model.startChat();
 
     // Initial request from user
-    const prompt = "What is the weather like in Montreal?";
-    const result = await chat.sendMessage(prompt);
-    console.log(result.response);
+    const prompt = 'What is the weather like in London?';
+    const response = await chat.sendMessage({
+      message: prompt
+    });
+    console.log(response);
 
     // Analyze safety ratings
-    this.analyzeSafetyRatings(result.response);
+    this.analyzeSafetyRatings(response);
 
     // Extract function call generated by the model
-    const call = result.response.functionCalls()?.[0];
+    const call = response?.functionCalls?.[0];
     if (call) {
       // Call the actual function
-      if (call.name === "getCurrentWeather") {
-        // Remeber to add aditional checks for the function name and parameters
-        const callResponse = functions[call.name](call.args as WeatherParams);
+      if (call.name === "getCurrentWeather" && call.args) {
+        // Remember to add additional checks for the function name and parameters
+        const { location, unit } = call.args as { location: string, unit: string };
+        const callResponse = functions[call.name]({ location, unit });
 
         // (Optional) Send the API response back to the model
         // You can skip this step if you only need the raw API response but not as part of a chatbot conversation.
-        const finalResponse = await chat.sendMessage([{
-          functionResponse: {
-            name: 'getCurrentWeather',
-            response: callResponse,
-          }
-        }]);
+        const finalResponse = await chat.sendMessage({ message: [{
+            functionResponse: {
+              name: 'getCurrentWeather',
+              response: callResponse,
+            }
+          }]
+        });
         // Answer from the model
-        console.log(`Gemini: ${finalResponse.response.text()}`);
+        console.log(`Gemini: ${finalResponse.text}`);
         // Answer from API response (as if we skipped the finalResponse step)
         const formattedDate = this.datePipe.transform(Date.now(), 'medium'); // Use DatePipe to format the date
         console.log(`Raw API: (${formattedDate}) Temperature in (${callResponse.location}) is (${callResponse.temperature}).`);
@@ -600,9 +636,11 @@ export class AppComponent implements OnInit {
     }
   }
 
-  async TestGeminiProGroundingSearch() {
+  async TestGeminiGoogleSearchRetrieval() {
     // Gemini Client
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
 
     const toolConfig = {
       tools: [
@@ -613,11 +651,11 @@ export class AppComponent implements OnInit {
 
               // (default) Run retrieval only when system decides it is necessary using a threshold.
               // The threshold to be used in dynamic retrieval. Default: 0.3
-              mode: DynamicRetrievalMode.MODE_DYNAMIC,
+              mode: DynamicRetrievalConfigMode.MODE_DYNAMIC,
               dynamicThreshold: 0.3, 
 
               // // Always trigger retrieval even if it's not used.
-              // mode: DynamicRetrievalMode.MODE_UNSPECIFIED,
+              // mode: DynamicRetrievalConfigMode.MODE_UNSPECIFIED,
             },
           },
         },
@@ -636,24 +674,84 @@ export class AppComponent implements OnInit {
       ...toolConfig,
     };
 
-    const model = genAI.getGenerativeModel({
-        // model: GoogleAI.Model.Gemini15ProExp,
-        model: GoogleAI.Model.Gemini15Flash, 
-
-        // // Warning: Gemini 2 models don't support grounding search
-        // model: GoogleAI.Model.Gemini20ProExp, 
-
+    const chatOptions = {
+      config: {
         ...generationConfig,
-      }
-    );
-    const chat = model.startChat();
+      },
+    };
+
+    const chat = ai.chats.create({
+      // model: GoogleAI.Model.Gemini15ProExp,
+      model: GoogleAI.Model.Gemini15ProExp,
+
+      // // Warning: Gemini 2 models don't support grounding search
+      // model: GoogleAI.Model.Gemini20ProExp, 
+
+      ...chatOptions,
+    });
 
     const prompt = 'What is the largest number with a name?';
-    const result = await chat.sendMessage(prompt);
-    console.log(result);
-    console.log(result.response.text());
-    console.log(result.response?.candidates?.[0].groundingMetadata);
-    console.log(this.parserService.parse(result.response));
+    const response = await chat.sendMessage({
+      message: prompt
+    });
+      
+    console.log(response);
+    console.log(response.text);
+    console.log(response?.candidates?.[0].groundingMetadata);
+    console.log(this.parserService.parse(response));
+  }
+
+  async TestGeminiGoogleSearch() {
+    // Gemini Client
+    const ai = new GoogleGenAI({
+      apiKey: environment.API_KEY
+    });
+
+    const toolConfig = {
+      tools: [
+        {
+          googleSearch: {},
+        },
+      ],
+    }
+
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+      maxOutputTokens: 100,
+
+      ...toolConfig,
+    };
+
+    const chatOptions = {
+      config: {
+        ...generationConfig,
+      },
+    };
+
+    const chat = ai.chats.create({
+      // model: GoogleAI.Model.Gemini15ProExp,
+      model: GoogleAI.Model.Gemini20Flash,
+
+      // // Warning: Gemini 2 models don't support google search
+      // model: GoogleAI.Model.Gemini20ProExp, 
+
+      ...chatOptions,
+    });
+
+    const prompt = 'What is the largest number with a name?';
+    const response = await chat.sendMessage({
+      message: prompt
+    });
+
+    console.log(response);
+    console.log(response.text);
+    console.log(response?.candidates?.[0].groundingMetadata);
+    console.log(this.parserService.parse(response));
   }
 
 
@@ -674,7 +772,7 @@ export class AppComponent implements OnInit {
   // VertexAI - requires Google Cloud Account + Setup
   ////////////////////////////////////////////////////////
 
-  async TestGeminiProVertexAI() {
+  async TestGeminiVertexAI() {
     // Gemini Client
     const ai = new GoogleGenAI({
       vertexai: true,
@@ -709,7 +807,7 @@ export class AppComponent implements OnInit {
     console.log(response.text);    
   }
 
-  async TestGeminiProWithVertexAIViaREST() {
+  async TestGeminiWithVertexAIViaREST() {
     // Docs: https://cloud.google.com/vertex-ai/docs/generative-ai/model-reference/gemini#request_body
     const prompt = this.buildPrompt('What is the largest number with a name?');
     const endpoint = this.buildEndpointUrl(environment.PROJECT_ID);

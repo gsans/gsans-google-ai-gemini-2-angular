@@ -40,7 +40,7 @@ export class GoogleSearchOutputParserService {
     support: GeminiGroundingSupport,
     _index: number
   ): string {
-    const indices: number[] = (support.groundingChunkIndices ?? []).map(i => i + 1);
+    const indices: number[] = (support.groundingChunkIndices ?? []).map(i => i + 1).sort();
     return indices.length ? ` [${indices.join(", ")}]` : '';
   }
 
@@ -95,7 +95,7 @@ export class GoogleSearchOutputParserService {
   }
 
   parse(response: any): string {
-    const text = response.text();
+    const text = response.text;
     const grounding = this.generationToGroundingInfo(response);
     if (!grounding) {
       return text;
@@ -104,7 +104,7 @@ export class GoogleSearchOutputParserService {
   }
 
   parseMarkdown(response: any): string {
-    const text = response.text();
+    const text = response.text;
     const grounding = this.generationToGroundingInfo(response);
     if (!grounding) {
       return text;
