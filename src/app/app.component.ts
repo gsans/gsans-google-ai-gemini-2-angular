@@ -7,18 +7,11 @@ import {
   GoogleGenAI, 
   Type,
   FunctionCallingConfigMode,
-  FunctionDeclaration,
   DynamicRetrievalConfigMode,
+  HarmBlockThreshold,
+  HarmCategory
 } from '@google/genai';
 
-import {
-  GoogleGenerativeAI,
-  HarmBlockThreshold,
-  HarmCategory,
-  SchemaType,
-  FunctionCallingMode,
-  DynamicRetrievalMode,
-} from '@google/generative-ai';
 import { environment } from '../environments/environment.development';
 import { GEMINI_PROMO } from './video-data';
 
