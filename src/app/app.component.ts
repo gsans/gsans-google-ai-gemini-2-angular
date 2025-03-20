@@ -48,6 +48,12 @@ export class AppComponent implements OnInit {
     //this.TestGeminiChatStreaming();
     //this.TestGeminiInputYouTubeUri();
 
+    // Experimental
+    //this.TestGeminiThinkingExp();
+
+    // Cache Usage
+    //this.TestGemini15FlashCachedCSV();
+
     // Tools
     //this.TestGeminiStructuredOutput();
     //this.TestGeminiCodeExecution();
@@ -86,7 +92,7 @@ export class AppComponent implements OnInit {
 
     const prompt = 'What is the largest number with a name?';
     const response = await ai.models.generateContent({
-      model: GoogleAI.Model.Gemini20Flash001,
+      model: GoogleAI.Model.Gemini20Flash,
       contents: prompt,
       config: generationConfig,
     });
@@ -110,7 +116,7 @@ export class AppComponent implements OnInit {
 
     const prompt = 'What is the largest number with a name?';
     const response = await ai.models.generateContent({
-      model: GoogleAI.Model.Gemini20Flash001,
+      model: GoogleAI.Model.Gemini20Flash,
       contents: prompt,
       config: generationConfig,
     });
@@ -330,6 +336,128 @@ export class AppComponent implements OnInit {
     })
     console.log(response.text);  
   }
+
+  ////////////////////////////////////////////////////////
+  // Experimental
+  ////////////////////////////////////////////////////////
+
+  async TestGeminiThinkingExp() {
+    // Gemini Client
+    const ai = new GoogleGenAI({ 
+      apiKey: environment.API_KEY,
+      apiVersion: 'v1alpha',
+      //httpOptions: { apiVersion: 'v1alpha' },
+    });
+
+    const generationConfig = {
+      safetySettings: [
+        {
+          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+          threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+        },
+      ],
+
+      candidateCount: 1,
+      thinkingConfig: { 
+        includeThoughts: true 
+      },
+    };
+
+    const prompt = 'What is the largest number with a name?';
+    const response = await ai.models.generateContent({
+      model: GoogleAI.Model.Gemini20FlashThinkingExp,
+      contents: prompt,
+      config: generationConfig,
+    });
+    console.log(response.text);
+  }
+
+
+  ////////////////////////////////////////////////////////
+  // Cache Usage
+  ////////////////////////////////////////////////////////
+
+  async TestGemini15FlashCachedCSV() {
+    // Gemini Client
+    const ai = new GoogleGenAI({ apiKey: environment.API_KEY });
+
+    try {
+      let csv = await this.fileConversionService.convertToBase64(
+        'apple-AAPL-historical-stock-data.csv'
+      );
+
+      // Check for successful conversion to Base64
+      if (typeof csv !== 'string') {
+        console.error('CSV conversion to Base64 failed.');
+        return;
+      }
+
+      // Create 24h cache for the CSV file (146KB)
+      const cache = await ai.caches.create({
+        model: GoogleAI.Model.Gemini15Flash,
+        config: {
+          contents: [
+            {
+              inlineData: {
+                mimeType: 'text/csv',
+                data: csv,
+              },
+            },
+          ],
+          displayName: 'CSV Cache',
+          //expireTime: '2025-08-31T23:59:59Z',
+          ttl: `${60 * 60 * 24}s`, // 24 hours
+        }
+      });
+      console.log('Cache created:', cache.name);
+
+      const prompt = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text:
+                'Create a line plot using Matplotlib to visualize the change in stock price for Apple (AAPL), with the x-axis as dates and the y-axis as stock price. Use data from the file and include a title and axis labels.',
+            },
+          ],
+        },
+      ];
+
+      const response = await ai.models.generateContent({
+        model: GoogleAI.Model.Gemini15Flash,
+        contents: prompt,
+        config: {
+          cachedContent: cache.name, // Important to use the cached CSV
+        },
+      });
+
+      // visualise Matplot diagram as output image
+      // https://jaredwinick.github.io/base64-image-viewer/
+      let base64ImageString = 'data:image/png;base64,';
+      if (response?.candidates) {
+        response.candidates.forEach((candidate) => {
+          candidate?.content?.parts?.forEach((part) => {
+            if (part.inlineData?.mimeType === 'image/png') {
+              base64ImageString += part.inlineData.data;
+            }
+          });
+        });
+      }
+      console.log(base64ImageString);
+      console.log(response.text);
+
+      // if (cache.name) {
+      //   await ai.caches.delete({ name: cache.name });
+      // }
+
+    } catch(error) {
+      console.error('Error using cached CSV:', error);
+    }   
+  }
+
+  ////////////////////////////////////////////////////////
+  // Tools
+  ////////////////////////////////////////////////////////
 
   async TestGeminiStructuredOutput() {
     // Documentation: 
@@ -836,7 +964,7 @@ export class AppComponent implements OnInit {
 
     const prompt = 'What is the largest number with a name?';
     const response = await ai.models.generateContent({
-      model: GoogleAI.Model.Gemini20Flash001,
+      model: GoogleAI.Model.Gemini20Flash,
       contents: prompt,
       config: generationConfig,
     });

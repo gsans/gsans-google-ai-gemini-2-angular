@@ -1,14 +1,18 @@
 export namespace GoogleAI {
+
+  // Stable models: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/model-versions
+  // Experimental models: https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/gemini-experimental
+  // Auto-updated models: automatically switch to the latest version. Eg: gemini-2.0-flash-001
+
   export enum Model {
     // Official Models
-    Gemini20Flash = "gemini-2.0-flash",
-    Gemini20Flash001 = 'gemini-2.0-flash-001',
-    Gemini20FlashLitePreview = "gemini-2.0-flash-lite-preview-02-05",
+    Gemini20Flash = "gemini-2.0-flash", // Auto-updated
+    Gemini20FlashLite = "gemini-2.0-flash-lite", // Auto-updated
+    Gemini15Flash = 'gemini-1.5-flash', // Auto-updated
+
+    // Experimental Models
     Gemini20ProExp = 'gemini-2.0-pro-exp-02-05',
-    // Note: gemini-2.0-flash-thinking-exp-01-21 is using a different API
-    Gemini15Flash = 'gemini-1.5-flash-002',
-    
-    //Preview Models
+    Gemini20FlashThinkingExp = 'gemini-2.0-flash-thinking-exp', // Auto-updated
     Gemini20FlashExp = 'gemini-2.0-flash-exp',
     Gemini15ProExp = 'gemini-1.5-pro-002',
   }
