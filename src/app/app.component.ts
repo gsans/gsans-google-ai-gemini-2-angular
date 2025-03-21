@@ -9,8 +9,16 @@ import {
   FunctionCallingConfigMode,
   DynamicRetrievalConfigMode,
   HarmBlockThreshold,
-  HarmCategory
+  HarmCategory,
+  LiveServerMessage,
+  Modality
 } from '@google/genai';
+import {
+  isModelTurn,
+  isServerContentMessage,
+  isSetupCompleteMessage,
+  isTurnComplete
+} from './live.types'
 
 import { environment } from '../environments/environment.development';
 import { GEMINI_PROMO } from './video-data';
@@ -39,7 +47,7 @@ export class AppComponent implements OnInit {
     // (⌘ + /) Toggle line comments to test different Gemini APIs.
 
     // Google AI
-    this.TestGemini();
+    //this.TestGemini();
     //this.TestGeminiSystemInstructions();
     //this.TestGeminiChat();
     //this.TestGeminiEmbeddings();
@@ -66,6 +74,9 @@ export class AppComponent implements OnInit {
     // Image generation
     //this.TestImagen3ImageGeneration();
     //this.TestGeminiImageGeneration();
+
+    // Live API
+    this.TestGeminiLiveAPITextModality();
 
     // Vertex AI
     //this.TestGeminiVertexAI();
@@ -932,6 +943,75 @@ export class AppComponent implements OnInit {
     }
     console.log("Safe request:", response);
   }
+
+  ///////////////////////////////////////////////////////
+  // Live API
+  ///////////////////////////////////////////////////////
+
+  handleServerMessage(message: LiveServerMessage) {
+    if (isSetupCompleteMessage(message)) {
+      console.log('Setup complete');
+      return;
+    }
+
+    if (isServerContentMessage(message)) {
+      const { serverContent } = message;
+
+      if (isModelTurn(serverContent)) {
+        console.log('Model turn:', serverContent.modelTurn.parts.map(part => part.text).toString());
+      }
+
+      if (isTurnComplete(serverContent)) {
+        console.log('Turn complete:', serverContent);
+      }
+    }
+  }
+
+  async TestGeminiLiveAPITextModality() {
+    // This is only a basic example that demonstrates how to use the live API to interact with the Gemini model.
+
+    // For a more comprehensive explanation see:
+    //   -- https://gerard-sans.medium.com/building-advanced-ai-voice-assistants-using-google-gemini-2-0-and-angular-81ca0fa68ff6
+    //   -- https://github.com/gsans/gemini-2-live-angular
+
+    // Gemini Live Client
+    // Important: apiVersion 'v1alpha' and model 'gemini-2.0-flash-exp' are required for the live API to work
+    const ai = new GoogleGenAI({ 
+      apiKey: environment.API_KEY,
+      apiVersion: 'v1alpha', 
+    });
+
+    // Connect to the live API (opens a WebSocket connection)
+    const session = await ai.live.connect({
+      model: GoogleAI.Model.Gemini20FlashExp,
+      callbacks: {
+        onopen: function () {
+          console.debug('Opened');
+        },
+
+        onmessage: this.handleServerMessage,
+
+        onerror: function (e: ErrorEvent) {
+          console.debug('Error:', e);
+        },
+        onclose: function (e: CloseEvent) {
+          console.debug('Close:', e);
+        },
+      },
+      config: { responseModalities: [Modality.TEXT] },
+    });
+
+    // Send a message to the live API
+    // Note that we receive the response asynchonously in the onmessage callback
+    const prompt = 'What is the largest number with a name?';
+    session.sendClientContent({ turns: prompt });
+
+    // Disconnect from the live API (closes the WebSocket connection)
+    setTimeout(() => {
+      session.close(); // Wait 10 seconds to allow the response to arrive
+    }, 10000);
+  }
+
 
   ////////////////////////////////////////////////////////
   // VertexAI - requires Google Cloud Account + Setup
